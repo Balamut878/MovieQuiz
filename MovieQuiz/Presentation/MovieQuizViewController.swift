@@ -5,6 +5,8 @@ final class MovieQuizViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
     }
+    @IBOutlet private var yesButton: UIButton!
+    @IBOutlet private var noButton: UIButton!
     @IBOutlet private var imageView: UIImageView!
     @IBOutlet private var textLabel: UILabel!
     @IBOutlet private var counterLabel: UILabel!
@@ -20,6 +22,7 @@ final class MovieQuizViewController: UIViewController {
     }
     // приватный метод вывода на экран вопроса, который принимает на вход вью модель вопроса и ничего не возвращает
     private func show(quiz step: QuizStepViewModel) {
+        imageView.layer.borderColor = UIColor.clear.cgColor // Сброс рамки для следующего вопроса
         imageView.image = step.image
         textLabel.text = step.question
         counterLabel.text = step.questionNumber
@@ -27,14 +30,15 @@ final class MovieQuizViewController: UIViewController {
     // приватный метод, который и меняет цвет рамки, и вызывает метод перехода
     // принимает на вход булевое значение и ничего не возвращает
     private func showAnswerResult(isCorrect: Bool) {
-        imageView.layer.masksToBounds = true // даём разрешение на рисование рамки
-        imageView.layer.borderWidth = 1 // толщина рамки
-        imageView.layer.borderColor = UIColor.white.cgColor // делаем рамку белой
-        imageView.layer.cornerRadius = 6 // радиус скругления углов рамки
+        // Настраиваем один раз базовые параметры рамки
         imageView.layer.masksToBounds = true
+        imageView.layer.cornerRadius = 20 // радиус скругления углов рамки
+        
+        // Изменяем цвет и ширину рамки в зависимости от правильности ответа
         imageView.layer.borderWidth = 8
         imageView.layer.borderColor = isCorrect ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
         
+        // Ожидание перед переходом к следующему вопросу или результатам
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             self.showNextQuestionOrResults()
         }
@@ -59,6 +63,7 @@ final class MovieQuizViewController: UIViewController {
                 let firstQuestion = self.questions[self.currentQuestionIndex]
                 let viewModel = self.convert(model: firstQuestion)
                 self.show(quiz: viewModel)
+                self.setButtonsEnabled(true) // Включаем кнопки
             }
             
             // Добавляем кнопку в UIAlertController
@@ -72,32 +77,39 @@ final class MovieQuizViewController: UIViewController {
             let nextQuestion = questions[currentQuestionIndex]
             let viewModel = convert(model: nextQuestion)
             show(quiz: viewModel)
+            self.setButtonsEnabled(true) // Включаем кнопки для следующего вопроса
         }
     }
+    private func setButtonsEnabled(_ isEnabled: Bool) {
+        yesButton.isEnabled = isEnabled
+        noButton.isEnabled = isEnabled
+    }
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
+        setButtonsEnabled(false)
         let currentQuestion = questions[currentQuestionIndex]
         let givenAnswer = true
         if givenAnswer == currentQuestion.correctAnswer {
-                correctAnswers += 1
-            }
+            correctAnswers += 1
+        }
         
         showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
         
     }
     
     @IBAction private func noButtonClicked(_ sender: UIButton) {
+        setButtonsEnabled(false)
         let currentQuestion = questions[currentQuestionIndex]
         let givenAnswer = false
         if givenAnswer == currentQuestion.correctAnswer {
-                correctAnswers += 1
-            }
+            correctAnswers += 1
+        }
         
         showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
         
     }
     
     // вью модель для состояния "Вопрос показан"
-    struct QuizStepViewModel {
+    private  struct QuizStepViewModel {
         // картинка с афишей фильма с типом UIImage
         let image: UIImage
         // вопрос о рейтинге квиза
@@ -105,7 +117,7 @@ final class MovieQuizViewController: UIViewController {
         // строка с порядковым номером этого вопроса (ex. "1/10")
         let questionNumber: String
     }
-    struct QuizQuestion {
+    private struct QuizQuestion {
         // строка с названием фильма,
         // совпадает с названием картинки афиши фильма в Assets
         let image: String
