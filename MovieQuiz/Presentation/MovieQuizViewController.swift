@@ -4,6 +4,8 @@ final class MovieQuizViewController: UIViewController {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
+            imageView.layer.cornerRadius = 20
+            imageView.layer.masksToBounds = true
     }
     @IBOutlet private var yesButton: UIButton!
     @IBOutlet private var noButton: UIButton!
