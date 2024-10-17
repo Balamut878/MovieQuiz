@@ -18,6 +18,9 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
+        // Скгругляем углы постера при инициализации
+        imageView.layer.masksToBounds = true
+        imageView.layer.cornerRadius = 20
         
         statisticService = StatisticService()
         let factory = QuestionFactory()
