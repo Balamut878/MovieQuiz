@@ -7,6 +7,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     @IBOutlet private var imageView: UIImageView!
     @IBOutlet private var textLabel: UILabel!
     @IBOutlet private var counterLabel: UILabel!
+    @IBOutlet private var activityIndicator: UIActivityIndicatorView!
     
     private var correctAnswers = 0
     private var currentQuestionIndex = 0
@@ -23,11 +24,14 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         imageView.layer.cornerRadius = 20
         
         statisticService = StatisticService()
-        let factory = QuestionFactory()
-        factory.setup(delegate: self)
+        
+        let factory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
         self.questionFactory = factory
+        
         alertPresenter = AlertPresenter(viewcontroller: self)
-        questionFactory?.requestNextQuestion()
+        
+        showLoadingIndicator() // Показываем индикатор загрузки
+        questionFactory?.loadData() // Запускаем загрузку данных
     }
     // MARK: - QuestionFactoryDelegate
     func didReceiveNextQuestion(question: QuizQuestion?) {
@@ -40,10 +44,18 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             self?.show(quiz: viewModel)
         }
     }
+    func didLoadDataFromServer() {
+        activityIndicator.isHidden = true // скрываем индикатор загрузки
+        questionFactory?.requestNextQuestion()
+    }
+    func didFailToLoadData(with error: Error) {
+        showNetworkError(message: error.localizedDescription) // возьмём в качестве сообщения описание ошибки
+    }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
     }
+    // MARK: - Private Methods
     private func showNextQuestionOrResults() {
         if currentQuestionIndex == questionsAmount - 1 {
             // Получаем результат текущей игры
@@ -107,19 +119,16 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         noButton.isEnabled = isEnabled
     }
     private func convert(model: QuizQuestion) -> QuizStepViewModel {
-        let questionStep = QuizStepViewModel( // 1
-            image: UIImage(named: model.image) ?? UIImage(), // 2
-            question: model.text, // 3
+        return QuizStepViewModel(
+            image: UIImage(data: model.image) ?? UIImage(), // Создание UIImage из Data
+            question: model.text,
             questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)"
         )
-        return questionStep
     }
     
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
         setButtonsEnabled(false)
-        guard let currentQuestion = currentQuestion else {
-            return
-        }
+        guard let currentQuestion = currentQuestion else { return }
         let givenAnswer = true
         if givenAnswer == currentQuestion.correctAnswer {
             correctAnswers += 1
@@ -129,9 +138,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     @IBAction private func noButtonClicked(_ sender: UIButton) {
         setButtonsEnabled(false)
-        guard let currentQuestion = currentQuestion else {
-            return
-        }
+        guard let currentQuestion = currentQuestion else { return }
         let givenAnswer = false
         if givenAnswer == currentQuestion.correctAnswer {
             correctAnswers += 1
@@ -140,4 +147,27 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
         
     }
+    private func showLoadingIndicator() {
+        activityIndicator.isHidden = false // говорим, что индикатор загрузки не скрыт
+        activityIndicator.startAnimating() // включаем анимацию
+    }
+    private func hideLoadingIndicator() {
+        activityIndicator.stopAnimating()
+        activityIndicator.isHidden = true
+    }
+    private func showNetworkError(message: String) {
+        hideLoadingIndicator()
+        
+        let model = AlertModel(
+            title: "Ошибка",
+            message: message,
+            buttonText: "Попробовать еще раз") { [weak self] in
+                self?.currentQuestionIndex = 0
+                self?.correctAnswers = 0
+                self?.questionFactory?.requestNextQuestion()
+            }
+        
+        alertPresenter?.show(alertModel: model)
+    }
 }
+
