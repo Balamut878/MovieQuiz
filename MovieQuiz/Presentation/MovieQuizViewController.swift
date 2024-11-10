@@ -18,6 +18,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
+        presenter.viewController = self
         // Скгругляем углы постера при инициализации
         imageView.layer.masksToBounds = true
         imageView.layer.cornerRadius = 20
@@ -101,7 +102,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         counterLabel.text = result.questionNumber
     }
     
-    private func showAnswerResult(isCorrect: Bool) {
+    func showAnswerResult(isCorrect: Bool) {
         imageView.layer.masksToBounds = true
         imageView.layer.cornerRadius = 20
         imageView.layer.borderWidth = 8
@@ -119,25 +120,16 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
         setButtonsEnabled(false)
-        guard let currentQuestion = currentQuestion else { return }
-        let givenAnswer = true
-        if givenAnswer == currentQuestion.correctAnswer {
-            correctAnswers += 1
-        }
-        showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
+        presenter.currentQuestion = currentQuestion
+        presenter.yesButtonClicked()
     }
     
     @IBAction private func noButtonClicked(_ sender: UIButton) {
         setButtonsEnabled(false)
-        guard let currentQuestion = currentQuestion else { return }
-        let givenAnswer = false
-        if givenAnswer == currentQuestion.correctAnswer {
-            correctAnswers += 1
-        }
-        
-        showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
-        
+        presenter.currentQuestion = currentQuestion
+        presenter.noButtonClicked()
     }
+    
     private func showLoadingIndicator() {
         activityIndicator.isHidden = false // говорим, что индикатор загрузки не скрыт
         activityIndicator.startAnimating() // включаем анимацию
