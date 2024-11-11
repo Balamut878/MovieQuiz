@@ -1,11 +1,3 @@
-//
-//  MovieQuizViewControllerProtocol.swift
-//  MovieQuiz
-//
-//  Created by Александр Дудченко on 11.11.2024.
-//
-
-import UIKit
 
 protocol MovieQuizViewControllerProtocol: AnyObject {
     func show(quiz step: QuizStepViewModel)

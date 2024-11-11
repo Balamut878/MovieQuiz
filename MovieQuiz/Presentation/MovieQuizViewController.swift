@@ -30,12 +30,26 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
     // MARK: - Actions
 
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
+        disableButtons()
         presenter.yesButtonClicked()
     }
 
     @IBAction private func noButtonClicked(_ sender: UIButton) {
+        disableButtons()
         presenter.noButtonClicked()
     }
+    
+    // MARK: - Button Control
+
+       func disableButtons() {
+           yesButton.isEnabled = false
+           noButton.isEnabled = false
+       }
+
+       func enableButtons() {
+           yesButton.isEnabled = true
+           noButton.isEnabled = true
+       }
 
     // MARK: - Private functions
 
@@ -44,6 +58,8 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
         imageView.image = step.image
         textLabel.text = step.question
         counterLabel.text = step.questionNumber
+        
+        enableButtons()
     }
 
     func show(quiz result: QuizResultsViewModel) {
@@ -53,6 +69,8 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
             title: result.title,
             message: message,
             preferredStyle: .alert)
+        
+        alert.view.accessibilityIdentifier = "Game results"
 
             let action = UIAlertAction(title: result.buttonText, style: .default) { [weak self] _ in
                 guard let self = self else { return }
@@ -87,6 +105,8 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
             title: "Ошибка",
             message: message,
             preferredStyle: .alert)
+        
+        alert.view.accessibilityIdentifier = "Game results"
 
             let action = UIAlertAction(title: "Попробовать ещё раз",
             style: .default) { [weak self] _ in
@@ -96,6 +116,7 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
             }
 
         alert.addAction(action)
+        self.present(alert, animated: true)
     }
 }
 

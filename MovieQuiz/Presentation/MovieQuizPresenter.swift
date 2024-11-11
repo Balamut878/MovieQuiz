@@ -16,6 +16,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     private let questionsAmount: Int = 10
     private var currentQuestionIndex: Int = 0
     private var correctAnswers: Int = 0
+    private var askedQuestions: [QuizQuestion] = []
 
     init(viewController: MovieQuizViewControllerProtocol) {
             self.viewController = viewController
@@ -43,6 +44,8 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         guard let question = question else {
             return
         }
+        
+        askedQuestions.append(question)
 
         currentQuestion = question
         let viewModel = convert(model: question)
